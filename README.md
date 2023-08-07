@@ -10,7 +10,7 @@ And should generate self-signed certification.
 Add references Windows Desktop Extensions for the UWP in UWP project.  
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/9c2721f2-0fc4-4a04-8162-bc3da3b69213)
 
-Modify Package.appxmanifest by adding extensions in Windows Application Packaging Project whitch is showed below.
+Modify Package.appxmanifest by adding extensions in Windows Application Packaging Project which is showed below.
 ```
 <Extensions>
   <uap:Extension Category="windows.appService">
