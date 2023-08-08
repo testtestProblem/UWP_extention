@@ -7,6 +7,7 @@ using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -36,7 +37,8 @@ namespace UWP_extention_test10
             {
                 //App.AppServiceConnected += MainPage_AppServiceConnected;
                 //App.AppServiceDisconnected += MainPage_AppServiceDisconnected;
-                await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
+                ApplicationData.Current.LocalSettings.Values["parameters"] = "test";
+                await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync("WinForms");
             }
         }
 

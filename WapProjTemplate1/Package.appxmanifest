@@ -46,8 +46,12 @@
         <uap:Extension Category="windows.appService">
           <uap:AppService Name="SampleInteropService" />
         </uap:Extension>
-		<desktop:Extension Category="windows.fullTrustProcess" Executable="WindowsFormsApp1\WindowsFormsApp1.exe" />
-      </Extensions>
+		<desktop:Extension Category="windows.fullTrustProcess" Executable="WindowsFormsApp1\WindowsFormsApp1.exe"> 
+		  <desktop:FullTrustProcess>
+		    <desktop:ParameterGroup GroupId="WinForms" Parameters="/winforms" />
+		  </desktop:FullTrustProcess>
+		</desktop:Extension>
+	  </Extensions>
     </Application>
   </Applications>
 
