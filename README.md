@@ -28,4 +28,6 @@ Universal Windows Platform (UWP). It has delicate UI by XAML. But it can not sup
 
 # Reference
 * https://stefanwick.com/2018/04/16/uwp-with-desktop-extension-part-3/
-
+* https://www.cnblogs.com/manupstairs/p/14178931.html
+* https://github.com/StefanWickDev/UWP-FullTrust/tree/master/UWP_FullTrust_3
+* https://freetion26.medium.com/uwp%E9%80%8F%E9%81%8Eappserviceconnection%E5%92%8Cwin32-process%E6%BA%9D%E9%80%9A%E5%8F%96%E5%BE%97%E7%B3%BB%E7%B5%B1%E8%B7%AF%E5%BE%91%E4%B8%8B%E6%AA%94%E6%A1%88%E5%88%97%E8%A1%A8-981dd0765e52
