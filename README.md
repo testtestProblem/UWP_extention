@@ -26,4 +26,6 @@ Universal Windows Platform (UWP). It has delicate UI by XAML. But it can not sup
 </Extensions>
 ```
 
+# Reference
+* https://stefanwick.com/2018/04/16/uwp-with-desktop-extension-part-3/
 
