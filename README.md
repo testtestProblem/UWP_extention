@@ -188,7 +188,7 @@ And and cover in UWP/MainPage.xmal.cs
 ```
 
 
-if can not find entrypoint, can see this for more information 
+if can not find entrypoint, can see this for more information  
 https://stackoverflow.com/questions/77065216/dep0700-registration-of-the-app-failed-while-uwp-extension-launch-consult-app/77493220#77493220
 
 ---------------------------------------------------------
