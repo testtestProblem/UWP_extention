@@ -8,7 +8,9 @@ Universal Windows Platform (UWP). It has delicate UI by XAML. But it can not sup
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/b60b14bc-4c7e-4bba-9e72-c146665b3147)
 
 
----------------Do this can sideload other app
+---------------
+Do this can sideload other app
+
 # UWP extention
 * This UWP_extention can side loading winform by using ```FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync()```.  
 
