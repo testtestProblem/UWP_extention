@@ -7,14 +7,13 @@ Universal Windows Platform (UWP). It has delicate UI by XAML. But it can not sup
 * Compile sample: UWP can not run at any CPU, and target should set Windows Application Packaging Project.  
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/b60b14bc-4c7e-4bba-9e72-c146665b3147)
 
+# UWP extention
 
 ---------------
-Do this can sideload other app
+For just sideload other app
 
-# UWP extention
 * This UWP_extention can side loading winform by using ```FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync()```.  
-
-
+ 
 * Modify WapProj/Package.appxmanifest by adding extensions in Windows Application Packaging Project.
 ```XML
 <Package
@@ -52,8 +51,6 @@ Do this can sideload other app
     </Application>
   </Applications>
 ```
-
-
 
 In WapProj/Dependencies 
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/8e778761-9ca0-47d2-8d8f-a4fe259f3b55)
@@ -137,8 +134,8 @@ And and cover in UWP/MainPage.xmal.cs
         {
             this.InitializeComponent();
 
-            ApplicationView.PreferredLaunchViewSize = new Size(200, 200);
-            ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.PreferredLaunchViewSize;
+           // ApplicationView.PreferredLaunchViewSize = new Size(200, 200);
+           // ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.PreferredLaunchViewSize;
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
@@ -147,8 +144,11 @@ And and cover in UWP/MainPage.xmal.cs
 
             if (ApiInformation.IsApiContractPresent("Windows.ApplicationModel.FullTrustAppContract", 1, 0))
             {
-                App.AppServiceConnected += MainPage_AppServiceConnected;
-                App.AppServiceDisconnected += MainPage_AppServiceDisconnected;
+                //for connect or disconnect event
+                //App.AppServiceConnected += MainPage_AppServiceConnected;
+                //App.AppServiceDisconnected += MainPage_AppServiceDisconnected;
+
+                //for sideload app
                 await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
             }
         }
@@ -182,18 +182,27 @@ And and cover in UWP/MainPage.xmal.cs
                 await dlg.ShowAsync();
             }
         }
+
+.......
+
 ```
+
+
+if can not find entrypoint, can see this for more information 
+https://stackoverflow.com/questions/77065216/dep0700-registration-of-the-app-failed-while-uwp-extension-launch-consult-app/77493220#77493220
+
 ---------------------------------------------------------
 
 
 
+Go to BelaunchedApp/reference and add those file 
+![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/9f198e02-c419-4764-a2b8-77e8e318e154)
 
 
 
 
 
-
-
+-----------------------------------------------
 
 
 
