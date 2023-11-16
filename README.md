@@ -7,24 +7,201 @@ Universal Windows Platform (UWP). It has delicate UI by XAML. But it can not sup
 * Compile sample: UWP can not run at any CPU, and target should set Windows Application Packaging Project.  
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/b60b14bc-4c7e-4bba-9e72-c146665b3147)
 
+
+---------------Do this can sideload other app
 # UWP extention
 * This UWP_extention can side loading winform by using ```FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync()```.  
+
+
+* Modify WapProj/Package.appxmanifest by adding extensions in Windows Application Packaging Project.
+```XML
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  IgnorableNamespaces="uap mp desktop rescap">
+```
+
+```XML
+ <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="WapProj_HotTab_Win10"
+        Description="WapProj_HotTab_Win10"
+        BackgroundColor="transparent"
+        Square150x150Logo="Images\Square150x150Logo.png"
+        Square44x44Logo="Images\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Images\SplashScreen.png" />
+      </uap:VisualElements>
+		
+	 <Extensions>
+		 <uap:Extension Category="windows.appService">
+		 	<uap:AppService Name="SampleInteropService" />
+		 </uap:Extension>
+		 <desktop:Extension Category="windows.fullTrustProcess" Executable="CollectDataAP\CollectDataAP.exe" />
+	 </Extensions>
+		
+    </Application>
+  </Applications>
+```
+
+
+
+In WapProj/Dependencies 
+![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/8e778761-9ca0-47d2-8d8f-a4fe259f3b55)
+
+Add UWP extension in UWP/Reference 
+![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/c3a48b03-6178-4231-be48-334583b6ae3d)
+ 
+Add and cover this in UWP/App.xmal.cs
+```C#
+sealed partial class App : Application
+    {
+        public static BackgroundTaskDeferral AppServiceDeferral = null;
+        public static AppServiceConnection Connection = null;
+        public static bool IsForeground = false;
+        public static event EventHandler<AppServiceTriggerDetails> AppServiceConnected;
+        public static event EventHandler AppServiceDisconnected;
+
+
+
+        private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
+        {
+            IsForeground = true;
+        }
+
+        private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
+        {
+            IsForeground = false;
+        }
+
+        /// <summary>
+        /// Initializes the singleton application object.  This is the first line of authored code
+        /// executed, and as such is the logical equivalent of main() or WinMain().
+        /// </summary>
+        public App()
+        {
+            this.InitializeComponent();
+            this.Suspending += OnSuspending;
+            this.EnteredBackground += App_EnteredBackground;
+            this.LeavingBackground += App_LeavingBackground;
+        }
+
+        /// <summary>
+        /// Handles connection requests to the app service
+        /// </summary>
+        protected override void OnBackgroundActivated(BackgroundActivatedEventArgs args)
+        {
+            base.OnBackgroundActivated(args);
+
+            if (args.TaskInstance.TriggerDetails is AppServiceTriggerDetails details)
+            {
+                // only accept connections from callers in the same package
+                if (details.CallerPackageFamilyName == Package.Current.Id.FamilyName)
+                {
+                    // connection established from the fulltrust process
+                    AppServiceDeferral = args.TaskInstance.GetDeferral();
+                    args.TaskInstance.Canceled += OnTaskCanceled;
+
+                    Connection = details.AppServiceConnection;
+                    AppServiceConnected?.Invoke(this, args.TaskInstance.TriggerDetails as AppServiceTriggerDetails);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Task canceled here means the app service client is gone
+        /// </summary>
+        private void OnTaskCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
+        {
+            AppServiceDeferral?.Complete();
+            AppServiceDeferral = null;
+            Connection = null;
+            AppServiceDisconnected?.Invoke(this, null);
+        }
+
+....
+
+```
+And and cover in UWP/MainPage.xmal.cs
+```C#
+ public MainPage()
+        {
+            this.InitializeComponent();
+
+            ApplicationView.PreferredLaunchViewSize = new Size(200, 200);
+            ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.PreferredLaunchViewSize;
+        }
+
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            if (ApiInformation.IsApiContractPresent("Windows.ApplicationModel.FullTrustAppContract", 1, 0))
+            {
+                App.AppServiceConnected += MainPage_AppServiceConnected;
+                App.AppServiceDisconnected += MainPage_AppServiceDisconnected;
+                await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
+            }
+        }
+
+        /// <summary>
+        /// When the desktop process is disconnected, reconnect if needed
+        /// </summary>
+        private async void MainPage_AppServiceDisconnected(object sender, EventArgs e)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            { 
+                Reconnect();
+            });
+        }
+
+        /// <summary>
+        /// Ask user if they want to reconnect to the desktop process
+        /// </summary>
+        private async void Reconnect()
+        {
+            if (App.IsForeground)
+            {
+                MessageDialog dlg = new MessageDialog("Connection to desktop process lost. Reconnect?");
+                UICommand yesCommand = new UICommand("Yes", async (r) =>
+                {
+                    await FullTrustProcessLauncher.LaunchFullTrustProcessForCurrentAppAsync();
+                });
+                dlg.Commands.Add(yesCommand);
+                UICommand noCommand = new UICommand("No", (r) => { });
+                dlg.Commands.Add(noCommand);
+                await dlg.ShowAsync();
+            }
+        }
+```
+---------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 * And should generate self-signed certification.  
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/0aca610e-2e1f-483e-be29-ae0ea8851638)
 
 * Add references Windows Desktop Extensions for the UWP in UWP project.  
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/9c2721f2-0fc4-4a04-8162-bc3da3b69213)
-
-* Modify Package.appxmanifest by adding extensions in Windows Application Packaging Project which is showed below.
-```
-<Extensions>
-  <uap:Extension Category="windows.appService">
-       <uap:AppService Name="SampleInteropService" />
-  </uap:Extension>
-	<desktop:Extension Category="windows.fullTrustProcess" Executable="WindowsFormsApp1\WindowsFormsApp1.exe" />
-</Extensions>
-```
 
 # Reference
 * https://stefanwick.com/2018/04/16/uwp-with-desktop-extension-part-3/
