@@ -128,7 +128,8 @@ sealed partial class App : Application
 ....
 
 ```
-And and cover in UWP/MainPage.xmal.cs
+
+Add and cover in UWP/MainPage.xmal.cs
 ```C#
  public MainPage()
         {
@@ -198,7 +199,109 @@ https://stackoverflow.com/questions/77065216/dep0700-registration-of-the-app-fai
 Go to BelaunchedApp/reference and add those file 
 ![image](https://github.com/testtestProblem/UWP_extention/assets/107662393/9f198e02-c419-4764-a2b8-77e8e318e154)
 
+Add and cover sildload_app/program
+```C#
+class Program
+    {
 
+        static private AppServiceConnection connection = null;
+
+
+        static void Main(string[] args)
+        {
+            InitializeAppServiceConnection();
+
+            string s_res;
+            while ((s_res = Console.ReadLine()) != "")
+            {
+                int i_res=int.Parse(s_res);
+                if (i_res == 1)
+                {
+                    double a=1, b=2;
+                    Console.WriteLine(a + " + " + b + " = ");
+                    Send2UWP(a, b);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Open connection to UWP app service
+        /// </summary>
+        static private async void InitializeAppServiceConnection()
+        {
+            connection = new AppServiceConnection();
+            connection.AppServiceName = "SampleInteropService";
+            connection.PackageFamilyName = Package.Current.Id.FamilyName;
+            connection.RequestReceived += Connection_RequestReceived;
+            connection.ServiceClosed += Connection_ServiceClosed;
+
+            AppServiceConnectionStatus status = await connection.OpenAsync();
+            if (status != AppServiceConnectionStatus.Success)
+            {
+                //In console, something wrong
+                Console.WriteLine(status.ToString());
+                //In app, something went wrong ...
+                //MessageBox.Show(status.ToString());
+                //this.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Handles the event when the desktop process receives a request from the UWP app
+        /// </summary>
+        static private async void Connection_RequestReceived(AppServiceConnection sender, AppServiceRequestReceivedEventArgs args)
+        {
+            // retrive the reg key name from the ValueSet in the request
+            string key = args.Request.Message["KEY"] as string;
+            if (key == "abcd")
+            {
+                // compose the response as ValueSet
+                ValueSet response = new ValueSet();
+                response.Add("GOOD", "KEY IS FOUNDED ^^");
+
+                // send the response back to the UWP
+                await args.Request.SendResponseAsync(response);
+            }
+            else
+            {
+                ValueSet response = new ValueSet();
+                response.Add("ERROR", "INVALID REQUEST");
+                await args.Request.SendResponseAsync(response);
+            }
+        }
+
+        /// <summary>
+        /// Handles the event when the app service connection is closed
+        /// </summary>
+        static private void Connection_ServiceClosed(AppServiceConnection sender, AppServiceClosedEventArgs args)
+        {
+            //In console, connection to the UWP lost, so we shut down the desktop process
+            Console.WriteLine("UWP lost connection! Please restart.");
+            Console.ReadLine();
+            Environment.Exit(0);
+            //In app, connection to the UWP lost, so we shut down the desktop process
+            //Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            //{
+            //    Application.Current.Shutdown();
+            //}));
+        }
+
+        static private async void Send2UWP(double a, double b)
+        {
+            // ask the UWP to calculate d1 + d2
+            ValueSet request = new ValueSet();
+            request.Add("D1", a);
+            request.Add("D2", b);
+
+            //start sending
+            AppServiceResponse response = await connection.SendMessageAsync(request);
+            //get response
+            double result = (double)response.Message["RESULT"];
+
+            Console.WriteLine(result.ToString());
+        }
+    }
+```
 
 
 
